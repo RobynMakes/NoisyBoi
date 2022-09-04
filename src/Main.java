@@ -6,7 +6,7 @@ public class Main extends PApplet {
     /*----------------------------------------------------------------------------------------------------------------*/
     public final int SCREEN_WIDTH = 400, SCREEN_HEIGHT = 400; // Width and Height variables.
     public final int NOISE_OCT = 5;
-    public final float NOISE_FALLOFF = (float) 0.5, NOISE_INCREMENT = (float) 0.02;
+    public final float NOISE_FALLOFF = (float) 0.5, NOISE_INCREMENT = (float) 0.01;
     public final float FRAME_RATE = 60; // FPS variable
     public final boolean SHOW_FPS = true; // Debug Booleans.
 
@@ -26,13 +26,18 @@ public class Main extends PApplet {
 
     public void draw(){
         background(255);
+
+        loadPixels();
+
+        noiseToPixels();
+
+        updatePixels();
+
+        /* Any debug code should be run at the end of the draw() method to insure it is visible. */
         if(SHOW_FPS) {
             textSize(16);
             text(frameRate, 10, 20);
         }
-        loadPixels();
-        noiseToPixels();
-        updatePixels();
     }
 
     /*
@@ -84,17 +89,21 @@ public class Main extends PApplet {
                 */
                 float noiseVal = noise(xoff,yoff);
 
-                /*
-                * This code block makes the noise either 0 or 1 depending on its decimal value.
-                *   1 if the value is 0.5 or greater.
-                *   0 if the value is 0.4 or lower.
-                * Good for generating caves.
+                /* -------------------------------------------------------------------------------------------------- */
+                /* Noise manipulation code should go here.
+                 * Specific noise manipulation code should be put in its own method.
                 */
-//                if(noiseVal != 0 || noiseVal != 1) {
-//                    if (abs(noiseVal - 0) < abs(noiseVal - 1)) { noiseVal = 1; }
-//                    else if (abs(noiseVal - 0) > abs(noiseVal - 1)) { noiseVal = 0; }
-//                    else { noiseVal = 1; }
-//                }
+                /* -------------------------------------------------------------------------------------------------- */
+
+                //noiseVal = constrainNoise(noiseVal, (float) 0.9);
+
+                //noiseVal = absNoise(noiseVal);
+
+                //noiseVal = roundNoise(noiseVal);
+
+                //noiseVal = invertNoise(noiseVal);
+
+                /* -------------------------------------------------------------------------------------------------- */
 
                 /* Maps the current noise value from 0-1 to 0-255 */
                 noiseVal = map(noiseVal, 0, 1, 0, 255);
@@ -108,6 +117,62 @@ public class Main extends PApplet {
                 pixels[x+y*width] = color(colR,colG,colB);
             }
         }
+    }
+
+    /*
+     * Inverts the given noise value.
+     */
+    float invertNoise(float n){
+        n = map(n, 0, 1, -1, 1);
+        n *= -1;
+        n = map(n, -1, 1, 0, 1);
+        return n;
+    }
+
+    /*
+     * This code block makes the noise either 0 or 1 depending on its decimal value.
+     *   1 if the value is 0.5 or greater.
+     *   0 if the value is 0.4 or lower.
+     * Good for generating caves.
+     */
+    float roundNoise(float n){
+        if(n != 0 || n != 1) {
+            if (abs(n - 0) < abs(n - 1)) { n = 1; }
+            else if (abs(n - 0) > abs(n - 1)) { n = 0; }
+            else { n = 1; }
+        }
+        return n;
+    }
+
+    /*
+     * This code block start's by mapping our noise value from 0<->1 to -1<->1.
+     * Then if the noise value is not equal to 0, 1, or -1 the value is inverted.
+     * Finally, we take the absolute value of the calculated value and assign it as our noise value.
+     * Creates veiny lines of black, but keeps the light noise.
+     */
+    float absNoise(float n) {
+        n = map(n, 0, 1, -1, 1);
+        if(n != 0 || n != 1 || n != -1){
+            n *= -1;
+        }
+        n = abs(n);
+        return n;
+    }
+
+    /*
+     * Maps the noise from 0<->1 to -1<->1
+     * If the noise value is less than the given value, it is inverted.
+     * Constrains the noise value from 0<->1 and returns the result.
+     * Creates a land and sea differentiation.
+     */
+    float constrainNoise(float n, float val){
+        n = map(n, 0, 1, -1, 1);
+        if(n > val){
+            n *= -1;
+        }
+        n = constrain(n, 0, 1);
+
+        return n;
     }
 
     /* Runs our draw() method. */
